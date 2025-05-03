@@ -64,7 +64,7 @@ In practical terms:
 
 ## Here is how HAProxy is integrated into the configuration using a 3-NIC topology:
 
-![Architecture](images/arch1.png)
+![Architecture](images/arch1.jpg)
 
 In an environment where HAProxy is configured with three network interfaces, the topology is built around three main segments: the Management network, the Workload network, and the Frontend network. Each one plays a specific role in the architecture:
 
@@ -168,7 +168,7 @@ Deploy a second HAProxy instance as a standalone VM, completely independent from
 
 This approach provides full control over frontend and backend configuration without any restrictions, making it possible to apply the official HAProxy settings for passive FTP. It also remains fully consistent with the existing architecture.
 
-![screen10](images/s10.png)
+![screen10](images/s10.jpg)
 
 **Bypass architecture overview**
 
@@ -195,7 +195,7 @@ This approach provides full control over frontend and backend configuration with
 
 ## Overview – Extended Architecture
 
-![screen11](images/s11.png)
+![screen11](images/s11.jpg)
 
 This approach preserves the original architecture for standard traffic flows (Kubernetes APIs, traditional LoadBalancer services), while adding a dedicated layer to handle FTP traffic with more advanced and flexible network control through the second HAProxy instance.
 

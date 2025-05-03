@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: vsftpd-pvc-logs
+  namespace: ftp-test
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: #your StorageClass
+  resources:
+    requests:
+      storage: 100Mi

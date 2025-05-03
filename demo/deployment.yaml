@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vsftpd
+  namespace: ftp-test
+  labels:
+    app: vsftpd
+spec:
+  selector:
+    matchLabels:
+      app: vsftpd
+  template:
+    metadata:
+      labels:
+        app: vsftpd
+    spec:
+      containers:
+        - name: vsftpd
+          image: "fauria/vsftpd:latest"
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: FTP_USER
+              value: "user"
+            - name: FTP_PASS
+              value: "pass"
+            - name: PASV_ADDRESS
+              value: "XXX.XXX.XXX.XXX" #External IP advertised to FTP clients for passive mode (HAProxy frontend or LoadBalancer IP)
+            - name: PASV_ENABLE
+              value: "YES"
+            - name: PASV_MIN_PORT
+              value: "21100"
+            - name: PASV_MAX_PORT
+              value: "21110"
+          ports:
+            - containerPort: 21
+            - containerPort: 20
+            - containerPort: 21100
+            - containerPort: 21101
+            - containerPort: 21102
+            - containerPort: 21103
+            - containerPort: 21104
+            - containerPort: 21105
+            - containerPort: 21106
+            - containerPort: 21107
+            - containerPort: 21108
+            - containerPort: 21109
+            - containerPort: 21110
+          volumeMounts:
+            - name: home
+              mountPath: "/home/vsftpd"
+            - name: logs
+              mountPath: "/var/log/vsftpd"
+      volumes:
+        - name: home
+          persistentVolumeClaim:
+            claimName: vsftpd-pvc
+        - name: logs
+          persistentVolumeClaim:
+            claimName: vsftpd-pvc-logs

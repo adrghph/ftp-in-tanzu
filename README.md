@@ -17,7 +17,7 @@ To set up this initial configuration, the following documentation was particular
 
 When deploying a Tanzu Supervisor, several networking topologies and load balancing options are available.
 
-- Available network topologies:
+- **Available network topologies**:
   - Single-cluster Supervisor networking with VDS
   - Three-zone Supervisor networking with VDS
   - Supervisor networking with NSX
@@ -25,7 +25,7 @@ When deploying a Tanzu Supervisor, several networking topologies and load balanc
   - Supervisor networking with NSX and Avi Load Balancer Controller
   - Three-zone Supervisor networking with NSX and Avi Load Balancer Controller
 
-- Available load balancing options:
+- **Available load balancing options**:
   - VDS with NSX Advanced Load Balancer
   - VDS with HAProxy (2 or 3 NICs)
   - NSX Advanced Load Balancer
@@ -36,17 +36,17 @@ When deploying a Tanzu Supervisor, several networking topologies and load balanc
 
 ## Context used in this setup:
 
-Topology: Single-cluster Supervisor networking with VDS, combined with an Active/Active vSAN Stretched Cluster
-Load Balancer: VDS with HAProxy configured in 3-NIC mode
+- **Topology**: Single-cluster Supervisor networking with VDS, combined with an Active/Active vSAN Stretched Cluster
+- **Load Balancer**: VDS with HAProxy configured in 3-NIC mode
 
 - https://techdocs.broadcom.com/us/en/vmware-cis/vsphere/vsphere-supervisor/8-0/running-vsphere-supervisor-on-vsan-stretched-cluster/active-active-configuration-for-tkg-clusters-on-vsan-stretched-cluster/configure-networking-for-active-active-deployment-modes.html
 
 ## Versions used in this setup:
 
-- vCenter: 8.0.3
-- Supervisor: v1.29.7
-- TKG: v1.26.13
-- HAProxy: 2.2.6
+- **vCenter**: 8.0.3
+- **Supervisor**: v1.29.7
+- **TKG**: v1.26.13
+- **HAProxy**: 2.2.6
 
 ## How HAProxy works within the Supervisor:
 
@@ -68,14 +68,14 @@ In practical terms:
 
 In an environment where HAProxy is configured with three network interfaces, the topology is built around three main segments: the Management network, the Workload network, and the Frontend network. Each one plays a specific role in the architecture:
 
-- The Management network connects the Supervisor control plane VMs (CPVMs) with the HAProxy VM. This is the administrative layer used by vCenter.
-- The Workload network carries internal Kubernetes traffic. It links the Supervisor VMs to the TKG nodes and allows HAProxy to route traffic throughout the environment. Each TKG node (control plane or worker) receives an IP from this network, based on a reserved IP range defined during deployment.
-- The Frontend network exposes services to external users or systems. This is where LoadBalancer-type services become reachable through virtual IPs (VIPs) managed and distributed by HAProxy, using a reserved IP range configured during setup.
+- The **Management network** connects the Supervisor control plane VMs (CPVMs) with the HAProxy VM. This is the administrative layer used by vCenter.
+- The **Workload network** carries internal Kubernetes traffic. It links the Supervisor VMs to the TKG nodes and allows HAProxy to route traffic throughout the environment. Each TKG node (control plane or worker) receives an IP from this network, based on a reserved IP range defined during deployment.
+- The **Frontend network** exposes services to external users or systems. This is where LoadBalancer-type services become reachable through virtual IPs (VIPs) managed and distributed by HAProxy, using a reserved IP range configured during setup.
 
 There are two types of LoadBalancer services handled by HAProxy and exposed through the Frontend network:
 
-- Control Plane LB (port 6443): Automatically created by the Supervisor to expose the Kubernetes API of TKG clusters.
-- User LB Services: Created by users within TKG clusters. These services are assigned dynamic external IPs.
+- **Control Plane LB (port 6443)**: Automatically created by the Supervisor to expose the Kubernetes API of TKG clusters.
+- **User LB Services**: Created by users within TKG clusters. These services are assigned dynamic external IPs.
 
 The Supervisor-managed HAProxy works well for standard use cases involving Kubernetes Services of type LoadBalancer. However, it quickly shows its limitations when trying to expose older or less compatible protocols, such as passive-mode FTP.
 
@@ -88,7 +88,8 @@ Passive FTP relies on dynamic connections, where multiple ports are opened tempo
 In this context, here is an example of an FTP deployment inside a TKG cluster, exposed using a Kubernetes Service of type LoadBalancer. The goal is to verify whether passive-mode FTP works correctly through the VIP automatically assigned by the Supervisor-managed HAProxy.
 
 Docker image used: https://github.com/fauria/docker-vsftpd
-The deployment YAML files are available in the /demo directory.
+
+The deployment YAML files are available in the **/demo** directory.
 
 Once deployed, the service exposes the following ports:
 
@@ -173,8 +174,8 @@ This approach provides full control over frontend and backend configuration with
 
 - A second standalone HAProxy VM is deployed with two network interfaces:
 
-  - 'NIC1' is connected to the same 'Frontend network' as the Supervisor and TKG components, and is used for client access.
-  - 'NIC2' is connected to the same 'Workload network' as the Supervisor and TKG nodes, and is used for internal traffic between the HAProxy VM and the Kubernetes nodes.
+  - **NIC1** is connected to the same 'Frontend network' as the Supervisor and TKG components, and is used for client access.
+  - **NIC2** is connected to the same 'Workload network' as the Supervisor and TKG nodes, and is used for internal traffic between the HAProxy VM and the Kubernetes nodes.
 
 - FTP service exposure inside the TKG cluster:
 
@@ -202,12 +203,16 @@ This approach preserves the original architecture for standard traffic flows (Ku
 
 In this demo, the second HAProxy instance is deployed on a Red Hat virtual machine with two network interfaces. The installation steps are as follows:
 
-**sudo dnf install -y haproxy**
-**sudo systemctl enable haproxy**
-**sudo systemctl start haproxy**
+```bash
+sudo dnf install -y haproxy
+sudo systemctl enable haproxy
+sudo systemctl start haproxy
+```
 
 ## Setting up the FTP server with the new architecture
 To deploy an FTP server that meets the requirements of the FTP protocol while leveraging the new standalone HAProxy VM, a ready-to-use solution has been developed in the form of a Helm chart: **kubeftp-proxy-helm**.
+
+https://github.com/adrghph/kubeftp-proxy-helm
 
 This chart allows quick installation of a vsftpd server inside a Kubernetes cluster, exposing all necessary ports for passive FTP (21, 20, and a defined range of passive ports) using explicitly configured NodePorts. These NodePorts are then used by the standalone HAProxy VM to route incoming FTP traffic to the correct nodes within the cluster.
 
@@ -249,7 +254,7 @@ sudo cp haproxy.cfg /etc/haproxy/haproxy.cfg
 sudo systemctl restart haproxy
 ```
 
-6 è FTP client connection:
+6 - FTP client connection:
 
 Once the HAProxy VM is properly configured and firewall rules are open (for TCP ports 20, 21, and 21100–21110), connecting is straightforward:
 

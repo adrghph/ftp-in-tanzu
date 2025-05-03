@@ -1,9 +1,9 @@
-# Passive FTP Server exposure Through Standalone HAProxy on Tanzu Kubernetes Grid — Bypassing Supervisor-Managed Load Balancer Limitations via Dual-VM and NodePort Strategy 
+# Passive FTP Server exposure Through Standalone HAProxy on Tanzu Kubernetes Grid : Bypassing Supervisor-Managed Load Balancer Limitations via Dual-VM and NodePort Strategy 
 
 Finding a way to support FTP within a Tanzu Kubernetes Grid (TKG) architecture on VMware proved to be challenging, with very little useful information available online. In the end, the chosen solution turned out to be relatively simple, but understanding the overall setup and, most importantly, identifying why it was not working required time and careful observation.
 
 ## Important note:
-This demonstration is based on an existing environment where the Supervisor was deployed on a VMware cluster with HAProxy configured in 3-NIC mode. This setup ensures proper routing between networks using Distributed Virtual Switches (DVS) and specific port groups created for this architecture.
+This demonstration is based on an existing environment where the Supervisor was deployed on a VMware cluster with HAProxy configured in 3-NIC mode. This setup ensures proper routing between networks using Distributed Virtual Switches (VDS) and specific port groups created for this architecture.
 
 The objective here is not to detail the initial installation of the Supervisor or HAProxy, nor to cover global cluster hardening or hardware and software preparation. Instead, the focus is on explaining the overall load balancing mechanism and the design workaround required to get the FTP protocol running inside a TKG environment.
 
@@ -31,15 +31,16 @@ When deploying a Tanzu Supervisor, several networking topologies and load balanc
   - NSX Advanced Load Balancer
   - NSX Edge Load Balancer
 
-- https://techdocs.broadcom.com/us/en/vmware-cis/vsphere/vsphere-supervisor/8-0/vsphere-supervisor-concepts-and-planning/supervisor-architecture-and-components/supervisor-networking.html
-- https://techdocs.broadcom.com/us/en/vmware-cis/vsphere/vsphere-supervisor/8-0/vsphere-supervisor-concepts-and-planning/vsphere-with-tanzu-deployment-options/topologies-for-deploying-the-haproxy-load-balancer.html
+https://techdocs.broadcom.com/us/en/vmware-cis/vsphere/vsphere-supervisor/8-0/vsphere-supervisor-concepts-and-planning/supervisor-architecture-and-components/supervisor-networking.html
+
+https://techdocs.broadcom.com/us/en/vmware-cis/vsphere/vsphere-supervisor/8-0/vsphere-supervisor-concepts-and-planning/vsphere-with-tanzu-deployment-options/topologies-for-deploying-the-haproxy-load-balancer.html
 
 ## Context used in this setup:
 
 - **Topology**: Single-cluster Supervisor networking with VDS, combined with an Active/Active vSAN Stretched Cluster
 - **Load Balancer**: VDS with HAProxy configured in 3-NIC mode
 
-- https://techdocs.broadcom.com/us/en/vmware-cis/vsphere/vsphere-supervisor/8-0/running-vsphere-supervisor-on-vsan-stretched-cluster/active-active-configuration-for-tkg-clusters-on-vsan-stretched-cluster/configure-networking-for-active-active-deployment-modes.html
+https://techdocs.broadcom.com/us/en/vmware-cis/vsphere/vsphere-supervisor/8-0/running-vsphere-supervisor-on-vsan-stretched-cluster/active-active-configuration-for-tkg-clusters-on-vsan-stretched-cluster/configure-networking-for-active-active-deployment-modes.html
 
 ## Versions used in this setup:
 
@@ -127,7 +128,7 @@ We can see that NodePort 31838 is marked as down, with an error message referrin
 
 By comparing the haproxy.cfg frontend and backend configuration with the official HAProxy documentation on passive FTP support, several key mismatches become apparent:
 
-- The backend for the control connection (port 21) should use stick-table and stick on src to ensure session persistence. This is not the case here.
+- The backend for the control connection (port 21) should use **stick-table** and **stick on src** to ensure session persistence. This is not the case here.
 - The backends for passive ports should not use standard tcp-check health checks, as these ports do not accept TCP connections unless an FTP session is already active. This check is active by default in the Supervisor-managed setup.
 - It is generally recommended to disable tcp-check on passive ports and rely solely on the control port (21) to validate the server’s availability.
 
@@ -210,7 +211,7 @@ sudo systemctl start haproxy
 ```
 
 ## Setting up the FTP server with the new architecture
-To deploy an FTP server that meets the requirements of the FTP protocol while leveraging the new standalone HAProxy VM, a ready-to-use solution has been developed in the form of a Helm chart: **kubeftp-proxy-helm**.
+To deploy an FTP server that meets the requirements of the protocol while leveraging the new standalone HAProxy VM, a ready-to-use solution has been developed in the form of a Helm chart: **kubeftp-proxy-helm**.
 
 https://github.com/adrghph/kubeftp-proxy-helm
 
@@ -259,7 +260,7 @@ sudo systemctl restart haproxy
 Once the HAProxy VM is properly configured and firewall rules are open (for TCP ports 20, 21, and 21100–21110), connecting is straightforward:
 
 ```bash
-ftp <haproxy_public_ip>
+ftp <pasvAddress>
 ```
 
 ## Result
@@ -273,6 +274,6 @@ Exposing a passive FTP server in a Tanzu Kubernetes Grid environment using the S
 
 To overcome these limitations, deploying a standalone HAProxy VM connected to both the workload and frontend networks offers a reliable, flexible, and standards-compliant solution. It enables fine-grained port management, session persistence, and full configuration control in line with HAProxy best practices.
 
-This hybrid design—where standard traffic continues to be handled by the Supervisor-managed HAProxy and protocol-specific traffic is offloaded to a dedicated instance—paves the way for a modular and scalable architecture. It demonstrates that it is possible to reconcile the constraints of a tightly managed platform with the requirements of more complex protocols, by maintaining control where it truly matters.
+This hybrid design where standard traffic continues to be handled by the Supervisor-managed HAProxy and protocol-specific traffic is offloaded to a dedicated instance paves the way for a modular and scalable architecture. It demonstrates that it is possible to reconcile the constraints of a tightly managed platform with the requirements of more complex protocols, by maintaining control where it truly matters.
 
 To further enhance this setup, introducing high availability for the standalone HAProxy VM (using Keepalived or a similar solution) would ensure maximum resilience without compromising the flexibility gained.

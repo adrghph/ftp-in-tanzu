@@ -230,7 +230,7 @@ cd kubeftp-proxy-helm
 
 Adjust the following parameters to match your environment:
 
-- **pasvAddress**  : Passive IP address to advertise to FTP clients. Set this to the IP address of the HAProxy interface accessible by external FTP clients (usually on the frontend/public network). This is the IP that FTP clients will use to initiate passive data connections.
+- `pasvAddress` : Passive IP address to advertise to FTP clients. Set this to the IP address of the HAProxy interface accessible by external FTP clients (usually on the frontend/public network). This is the IP that FTP clients will use to initiate passive data connections.
 
 For example, if your HAProxy has:
 

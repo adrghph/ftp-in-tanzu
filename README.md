@@ -230,7 +230,19 @@ cd kubeftp-proxy-helm
 
 Adjust the following parameters to match your environment:
 
-- `pasvAddress`: Public IP of the standalone HAProxy VM (Frontend interface / NIC1)
+- **pasvAddress**  : Passive IP address to advertise to FTP clients. Set this to the IP address of the HAProxy interface accessible by external FTP clients (usually on the frontend/public network). This is the IP that FTP clients will use to initiate passive data connections.
+
+For example, if your HAProxy has:
+
+**Frontend interface**: 203.0.113.15 (Frontend interface / NIC1 /reachable by FTP clients)
+
+**Backend interface**: 10.0.0.10 (used to reach Kubernetes nodes)
+
+Then you should set:
+
+```bash
+pasvAddress: "203.0.113.15"
+```
 - `service.nodePortCommand`: For example, `30021` for FTP command port (21)
 - `service.nodePortData`: For example, `30020` for FTP data port (20)
 - `service.nodePortPassiveMin`: Set to `32100`, and `pasvMinPort` to `21100` (continue up to 21110) for passive ports
